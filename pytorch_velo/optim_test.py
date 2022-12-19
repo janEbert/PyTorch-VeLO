@@ -11,7 +11,7 @@ def loss_with_backward(opt):
     return loss
 
 devices = ['cpu']
-if torch.cuda.is_available():
+if th.cuda.is_available():
     devices.append('cuda')
 
 for device in devices:
