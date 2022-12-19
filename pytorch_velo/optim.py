@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Optional, Union
 
 from learned_optimization.optimizers.base import (
     Optimizer as LearnedOptimizerBase,
@@ -54,6 +54,7 @@ class VeLOOptimizer(th.optim.Optimizer):
             base_lopt_fn: Callable[[], LearnedOptimizerBase] = (
                 _DEFAULT_LOPT_FN
             ),
+            model_state: Optional[th.Tensor] = None,
             seed: int = 0,
     ) -> None:
         defaults = dict(weight_decay=weight_decay)
@@ -81,6 +82,7 @@ class VeLOOptimizer(th.optim.Optimizer):
         self.state['rng_key'], init_key = jax.random.split(rng_key)
         self.state['opt_state'] = self.opt.init(
             jax_params,
+            model_state=model_state,
             num_steps=num_training_steps,
             key=init_key,
         )
@@ -100,6 +102,7 @@ class VeLOOptimizer(th.optim.Optimizer):
             elif isinstance(closure_result, th.Tensor):
                 loss = closure_result
                 assert loss.numel() == 1, 'loss must be a scalar'
+                model_state = None
             else:
                 raise TypeError('closure returned type that is not handled: ')
 
@@ -118,6 +121,7 @@ class VeLOOptimizer(th.optim.Optimizer):
         self.state['opt_state'] = self.opt.update(
             self.state['opt_state'],
             jax_grad,
+            model_state=model_state,
             loss=jnp.asarray(
                 loss.detach().cpu().numpy(),
                 dtype=_th_dtype_to_jax(loss.dtype),
