@@ -10,18 +10,22 @@ def loss_with_backward(opt):
     loss.backward()
     return loss
 
+devices = ['cpu']
+if torch.cuda.is_available():
+    devices.append('cuda')
 
-for dtype in [th.float32, th.float16]:
-    init_params = [
-        th.nn.Parameter(th.tensor([1.0])),
-        th.nn.Parameter(th.tensor([1.0])),
-    ]
-    opt = VeLOOptimizer(init_params, num_training_steps=100)
+for device in devices:
+    for dtype in [th.float32, th.float16]:
+        init_params = [
+            th.nn.Parameter(th.tensor([1.0], device=device)),
+            th.nn.Parameter(th.tensor([1.0], device=device)),
+        ]
+        opt = VeLOOptimizer(init_params, num_training_steps=100)
 
-    def closure():
-        return loss_with_backward(opt)
+        def closure():
+            return loss_with_backward(opt)
 
-    opt.step(closure)
+        opt.step(closure)
 
-    loss = loss_with_backward(opt)
-    opt.step(closure)
+        loss = loss_with_backward(opt)
+        opt.step(closure)

@@ -13,4 +13,6 @@ not consume all GPU memory.
 
 Alpha-level software. Not well tested, probably highly imperformant.
 
+Currently parameters are **completely copied** if using a GPU.
+
 Need to figure out if/how often tensors are copied.

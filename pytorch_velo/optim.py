@@ -69,7 +69,10 @@ class VeLOOptimizer(th.optim.Optimizer):
 
         jax_params = {
             str(i): [
-                jnp.asarray(p.detach(), dtype=_th_dtype_to_jax(p.dtype))
+                jnp.asarray(
+                    p.detach().cpu().numpy(),
+                    dtype=_th_dtype_to_jax(p.dtype),
+                )
                 for p in group['params']
             ]
             for (i, group) in enumerate(self.param_groups)
@@ -103,7 +106,10 @@ class VeLOOptimizer(th.optim.Optimizer):
 
         jax_grad = {
             str(i): [
-                jnp.asarray(p.grad, dtype=_th_dtype_to_jax(p.grad.dtype))
+                jnp.asarray(
+                    p.grad.detach().cpu().numpy(),
+                    dtype=_th_dtype_to_jax(p.grad.dtype),
+                )
                 for p in group['params']
             ]
             for (i, group) in enumerate(self.param_groups)
@@ -113,7 +119,10 @@ class VeLOOptimizer(th.optim.Optimizer):
         self.state['opt_state'] = self.opt.update(
             self.state['opt_state'],
             jax_grad,
-            loss=jnp.asarray(loss, dtype=_th_dtype_to_jax(loss.dtype)),
+            loss=jnp.asarray(
+                loss.detach().cpu().numpy(),
+                dtype=_th_dtype_to_jax(loss.dtype),
+            ),
             key=opt_key,
         )
 
@@ -122,7 +131,11 @@ class VeLOOptimizer(th.optim.Optimizer):
                     group['params'],
                     self.opt.get_params(self.state['opt_state'])[str(i)],
             ):
-                param.data = th.asarray(jax_param, dtype=param.data.dtype)
+                param.data = th.asarray(
+                    jax_param,
+                    dtype=param.data.dtype,
+                    device=param.data.device,
+                )
         return loss
 
     def __setstate__(self, state: Dict) -> None:
