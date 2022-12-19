@@ -44,7 +44,6 @@ def _th_dtype_to_jax(dtype: th.dtype) -> jnp.dtype:
     return jax_dtype
 
 
-# FIXME convert dtypes
 class VeLOOptimizer(th.optim.Optimizer):
     def __init__(
             self,
