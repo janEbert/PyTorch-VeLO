@@ -17,6 +17,7 @@ try:
 except ImportError:
     GpuDevice = None
 import torch as th
+import torch.utils.dlpack
 
 if GpuDevice is not None:
     JAXDevice = Union[Device, GpuDevice]
