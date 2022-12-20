@@ -19,6 +19,10 @@ python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO.git
 
 Alpha-level software. Not well tested, probably highly imperformant.
 
+Only parameters with trivial strides are supported; this will have to
+be implemented on the JAX side (see
+https://github.com/google/jax/issues/8082).
+
 With `jax==0.3.21` (automatically installed via `learned_optimization`
 as of writing), the `jax.default_device` context manager does not
 work. To force JAX to use the CPU for its optimizer, set the
