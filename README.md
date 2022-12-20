@@ -13,6 +13,7 @@ not consume all GPU memory.
 
 Alpha-level software. Not well tested, probably highly imperformant.
 
-Currently parameters are **completely copied** if using a GPU.
-
-Need to figure out if/how often tensors are copied.
+With `jax==0.3.21` (automatically installed via `learned_optimization`
+as of writing), the `jax.default_device` context manager does not
+work. To force JAX to use the CPU for its optimizer, set the
+environment variable `JAX_PLATFORMS=cpu`.

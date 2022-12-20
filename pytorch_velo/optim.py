@@ -9,9 +9,12 @@ from learned_optimization.research.general_lopt.prefab import (
 )
 from learned_optimization.research.general_lopt import pretrained_optimizers
 import jax
+import jax.dlpack
 import jax.numpy as jnp
+from jaxlib.xla_extension import Device, GpuDevice
 import torch as th
 
+JAXDevice = Union[Device, GpuDevice]
 LossClosure = Union[
     Callable[[], th.Tensor],
     Callable[[], float],
@@ -20,10 +23,13 @@ LossClosure = Union[
 _DEFAULT_LOPT_FN = (
     inspect.signature(LearnedOptimizer).parameters['base_lopt_fn'].default
 )
-_TH_DTYPE_TO_JAX = {
-    th.float16: jnp.float16,
-    th.float32: jnp.float32,
-}
+
+
+class DeviceMappingError(ValueError):
+    def __init__(self, msg: Optional[str] = None) -> None:
+        if msg is None:
+            msg = 'could not map pytorch device to jax device'
+        super().__init__(msg)
 
 
 def get_lopt_fn(opt_name: str, force=False) -> Callable:
@@ -37,11 +43,35 @@ def get_lopt_fn(opt_name: str, force=False) -> Callable:
     return fn
 
 
-def _th_dtype_to_jax(dtype: th.dtype) -> jnp.dtype:
-    jax_dtype = _TH_DTYPE_TO_JAX.get(dtype)
-    if jax_dtype is None:
-        raise KeyError('unsupported dtype: ' + str(dtype))
-    return jax_dtype
+def _th_device_to_jax(device: th.device) -> JAXDevice:
+    device_index = device.index if device.index is not None else 0
+    jax_devices = jax.local_devices(backend=device.type)
+    jax_device = jax_devices[device_index]
+    # We iterate explicitly in case the index does not match.
+    if jax_device.id != device_index:
+        jax_device = next(
+            (
+                jax_device
+                for jax_device in jax_devices
+                if jax_device.id == device_index
+            ),
+            None,
+        )
+        if jax_device is None:
+            raise DeviceMappingError()
+    return jax_device
+
+
+def _th_to_jax(tensor: th.Tensor) -> jnp.ndarray:
+    return jax.dlpack.from_dlpack(
+        th.utils.dlpack.to_dlpack(tensor.detach()),
+    )
+
+
+def _jax_to_th(array: jnp.ndarray) -> th.Tensor:
+    return th.utils.dlpack.from_dlpack(
+        jax.dlpack.to_dlpack(array),
+    )
 
 
 class VeLOOptimizer(th.optim.Optimizer):
@@ -56,23 +86,28 @@ class VeLOOptimizer(th.optim.Optimizer):
             ),
             model_state: Optional[th.Tensor] = None,
             seed: int = 0,
+            device: Union[th.device, str, None] = None,
     ) -> None:
         defaults = dict(weight_decay=weight_decay)
         super().__init__(params, defaults)
 
-        self.opt = LearnedOptimizer(
-            num_training_steps=num_training_steps,
-            weight_decay=weight_decay,
-            max_training_steps=max_training_steps,
-            base_lopt_fn=base_lopt_fn,
-        )
+        if device is None:
+            device = self.param_groups[0]['params'][0].device
+        elif isinstance(device, str):
+            device = th.device(device)
+        jax_device = _th_device_to_jax(device)
+
+        with jax.default_device(jax_device):
+            self.opt = LearnedOptimizer(
+                num_training_steps=num_training_steps,
+                weight_decay=weight_decay,
+                max_training_steps=max_training_steps,
+                base_lopt_fn=base_lopt_fn,
+            )
 
         jax_params = {
             str(i): [
-                jnp.asarray(
-                    p.detach().cpu().numpy(),
-                    dtype=_th_dtype_to_jax(p.dtype),
-                )
+                _th_to_jax(p)
                 for p in group['params']
             ]
             for (i, group) in enumerate(self.param_groups)
@@ -112,13 +147,7 @@ class VeLOOptimizer(th.optim.Optimizer):
                 raise TypeError('closure returned type that is not handled: ')
 
         jax_grad = {
-            str(i): [
-                jnp.asarray(
-                    p.grad.detach().cpu().numpy(),
-                    dtype=_th_dtype_to_jax(p.grad.dtype),
-                )
-                for p in group['params']
-            ]
+            str(i): [_th_to_jax(p.grad) for p in group['params']]
             for (i, group) in enumerate(self.param_groups)
         }
         jax_model_state = (
@@ -133,10 +162,7 @@ class VeLOOptimizer(th.optim.Optimizer):
             self.state['opt_state'],
             jax_grad,
             model_state=jax_model_state,
-            loss=jnp.asarray(
-                loss.detach().cpu().numpy(),
-                dtype=_th_dtype_to_jax(loss.dtype),
-            ),
+            loss=_th_to_jax(loss),
             key=opt_key,
         )
 
@@ -145,11 +171,7 @@ class VeLOOptimizer(th.optim.Optimizer):
                     group['params'],
                     self.opt.get_params(self.state['opt_state'])[str(i)],
             ):
-                param.data[:] = th.asarray(
-                    jax_param,
-                    dtype=param.data.dtype,
-                    device=param.data.device,
-                ).ravel()
+                param.data[:] = _jax_to_th(jax_param).ravel()
         return loss
 
     def __setstate__(self, state: Dict) -> None:
