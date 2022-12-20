@@ -1,6 +1,6 @@
 import torch as th
 
-from optim import VeLOOptimizer
+from optim import VeLO
 
 
 def loss_with_backward(opt):
@@ -20,7 +20,7 @@ for device in devices:
             th.nn.Parameter(th.tensor([1.0], device=device)),
             th.nn.Parameter(th.tensor([1.0], device=device)),
         ]
-        opt = VeLOOptimizer(init_params, num_training_steps=100)
+        opt = VeLO(init_params, num_training_steps=100)
 
         def closure():
             return loss_with_backward(opt)

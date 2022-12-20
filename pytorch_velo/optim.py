@@ -74,7 +74,7 @@ def _jax_to_th(array: jnp.ndarray) -> th.Tensor:
     )
 
 
-class VeLOOptimizer(th.optim.Optimizer):
+class VeLO(th.optim.Optimizer):
     def __init__(
             self,
             params,
