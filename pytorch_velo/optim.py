@@ -77,12 +77,17 @@ class VeLOOptimizer(th.optim.Optimizer):
             ]
             for (i, group) in enumerate(self.param_groups)
         }
+        jax_model_state = (
+            _th_to_jax(model_state)
+            if model_state is not None
+            else model_state
+        )
 
         rng_key = jax.random.PRNGKey(seed)
         self.state['rng_key'], init_key = jax.random.split(rng_key)
         self.state['opt_state'] = self.opt.init(
             jax_params,
-            model_state=model_state,
+            model_state=jax_model_state,
             num_steps=num_training_steps,
             key=init_key,
         )
@@ -116,12 +121,18 @@ class VeLOOptimizer(th.optim.Optimizer):
             ]
             for (i, group) in enumerate(self.param_groups)
         }
+        jax_model_state = (
+            _th_to_jax(model_state)
+            if model_state is not None
+            else model_state
+        )
+
         self.state['rng_key'], opt_key = jax.random.split(
             self.state['rng_key'])
         self.state['opt_state'] = self.opt.update(
             self.state['opt_state'],
             jax_grad,
-            model_state=model_state,
+            model_state=jax_model_state,
             loss=jnp.asarray(
                 loss.detach().cpu().numpy(),
                 dtype=_th_dtype_to_jax(loss.dtype),
