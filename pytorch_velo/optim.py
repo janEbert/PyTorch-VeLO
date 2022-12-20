@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Optional, Union
 
 from learned_optimization.optimizers.base import (
     Optimizer as LearnedOptimizerBase,
