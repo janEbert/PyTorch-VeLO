@@ -134,11 +134,11 @@ class VeLOOptimizer(th.optim.Optimizer):
                     group['params'],
                     self.opt.get_params(self.state['opt_state'])[str(i)],
             ):
-                param.data = th.asarray(
+                param.data[:] = th.asarray(
                     jax_param,
                     dtype=param.data.dtype,
                     device=param.data.device,
-                )
+                ).ravel()
         return loss
 
     def __setstate__(self, state: Dict) -> None:
