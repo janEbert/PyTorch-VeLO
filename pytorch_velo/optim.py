@@ -88,7 +88,7 @@ class VeLO(th.optim.Optimizer):
             seed: int = 0,
             device: Union[th.device, str, None] = None,
     ) -> None:
-        defaults = dict(weight_decay=weight_decay)
+        defaults = {}
         super().__init__(params, defaults)
 
         if device is None:
@@ -173,8 +173,3 @@ class VeLO(th.optim.Optimizer):
             ):
                 param.data[:] = _jax_to_th(jax_param).ravel()
         return loss
-
-    def __setstate__(self, state: Dict) -> None:
-        super().__setstate__(state)
-        for group in self.param_groups:
-            group.setdefault('weight_decay', 0.0)
