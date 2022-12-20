@@ -11,10 +11,17 @@ from learned_optimization.research.general_lopt import pretrained_optimizers
 import jax
 import jax.dlpack
 import jax.numpy as jnp
-from jaxlib.xla_extension import Device, GpuDevice
+from jaxlib.xla_extension import Device
+try:
+    from jaxlib.xla_extension import GpuDevice
+except ImportError:
+    GpuDevice = None
 import torch as th
 
-JAXDevice = Union[Device, GpuDevice]
+if GpuDevice is not None:
+    JAXDevice = Union[Device, GpuDevice]
+else:
+    JAXDevice = Device
 LossClosure = Union[
     Callable[[], th.Tensor],
     Callable[[], float],
