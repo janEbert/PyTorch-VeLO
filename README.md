@@ -9,6 +9,12 @@ not have to re-implement the optimizer in PyTorch.
 `XLA_PYTHON_CLIENT_PREALLOCATE=false` is automatically set so JAX does
 not consume all GPU memory.
 
+## Installation
+
+```shell
+python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO
+```
+
 ## Caution
 
 Alpha-level software. Not well tested, probably highly imperformant.
