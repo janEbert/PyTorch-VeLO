@@ -9,7 +9,7 @@ setup(
             'learned_optimization '
             '@ git+https://github.com/google/learned_optimization.git'
         ),
-        'chex>=0.1.5',
+        'optax>=0.1',
         'torch',
     ]
 )
