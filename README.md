@@ -12,7 +12,7 @@ not consume all GPU memory.
 ## Installation
 
 ```shell
-python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO
+python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO.git
 ```
 
 ## Caution
