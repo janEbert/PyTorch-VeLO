@@ -22,7 +22,7 @@ from pytorch_velo import VeLO
 
 [...]
 
-train_steps = epochs * len(dataset)
+train_steps = epochs * len(dataset)  # Assuming `dataset` is already batched.
 opt = VeLO(params, num_training_steps=train_steps, weight_decay=0.0)
 
 # Use like any other PyTorch optimizer.
