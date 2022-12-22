@@ -11,5 +11,7 @@ setup(
         ),
         'optax>=0.1',
         'torch',
-    ]
+    ],
+    author='Jan Ebert',
+    author_email='janpublicebert@posteo.de',
 )
