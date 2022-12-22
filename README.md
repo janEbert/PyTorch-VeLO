@@ -15,6 +15,19 @@ not consume all GPU memory.
 python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO.git
 ```
 
+## Usage
+
+```python
+from pytorch_velo import VeLO
+
+[...]
+
+train_steps = epochs * len(dataset)
+opt = VeLO(params, num_training_steps=train_steps, weight_decay=0.0)
+
+# Use like any other PyTorch optimizer.
+```
+
 ## Caution
 
 Alpha-level software. Not well tested, probably highly imperformant.
