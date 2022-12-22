@@ -20,7 +20,7 @@ python3 -m pip install git+https://github.com/janEbert/PyTorch-VeLO.git
 ```python
 from pytorch_velo import VeLO
 
-[...]
+# [...]
 
 train_steps = epochs * len(dataset)  # Assuming `dataset` is already batched.
 opt = VeLO(params, num_training_steps=train_steps, weight_decay=0.0)
