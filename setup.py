@@ -4,6 +4,7 @@ setup(
     name='pytorch_velo',
     python_requires='>=3.8',
     version='0.0.1',
+    packages=['pytorch_velo'],
     install_requires=[
         (
             'learned_optimization '
