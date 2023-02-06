@@ -152,7 +152,10 @@ class VeLO(th.optim.Optimizer):
                 assert loss.numel() == 1, 'loss must be a scalar'
                 model_state = None
             else:
-                raise TypeError('closure returned type that is not handled: ')
+                raise TypeError(
+                    'closure returned type that is not handled: '
+                    + str(type(closure_result))
+                )
 
         jax_grad = {
             str(i): [_th_to_jax(p.grad.ravel()) for p in group['params']]
