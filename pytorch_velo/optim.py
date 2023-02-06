@@ -115,13 +115,13 @@ class VeLO(th.optim.Optimizer):
 
         jax_params = {
             str(i): [
-                _th_to_jax(p)
+                _th_to_jax(p.ravel())
                 for p in group['params']
             ]
             for (i, group) in enumerate(self.param_groups)
         }
         jax_model_state = (
-            _th_to_jax(model_state)
+            _th_to_jax(model_state.ravel())
             if model_state is not None
             else model_state
         )
@@ -155,11 +155,11 @@ class VeLO(th.optim.Optimizer):
                 raise TypeError('closure returned type that is not handled: ')
 
         jax_grad = {
-            str(i): [_th_to_jax(p.grad) for p in group['params']]
+            str(i): [_th_to_jax(p.grad.ravel()) for p in group['params']]
             for (i, group) in enumerate(self.param_groups)
         }
         jax_model_state = (
-            _th_to_jax(model_state)
+            _th_to_jax(model_state.ravel())
             if model_state is not None
             else model_state
         )
@@ -179,5 +179,5 @@ class VeLO(th.optim.Optimizer):
                     group['params'],
                     self.opt.get_params(self.state['opt_state'])[str(i)],
             ):
-                param.data[:] = _jax_to_th(jax_param).ravel()
+                param.data[:] = _jax_to_th(jax_param).reshape(param.shape)
         return loss
